@@ -7,7 +7,7 @@ int main()
     FILE *arq;
     int i, depende;
 
-    arq = fopen("/home/raiza/UFRRJ/AA SO/processos.txt","w+");
+    arq = fopen("processos.txt","w+");
 
     //Escreve a quantidade de processos a serem escalonados
     fprintf(arq,"%d \n",N);

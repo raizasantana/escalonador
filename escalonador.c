@@ -10,6 +10,13 @@
 *   O status pode ser 0 - PRONTO; 1 - BLOQUEADO; 2 - EXECUTANDO; 3 - TERMINADO
 */
 
+void zeros(int *vetor,int tam)
+{
+    int i;
+    for(i = 0; i < tam; i++)
+        vetor[i] = 0;
+}
+
 void adiciona_na_fila(int *tam, int fila[10], int p[M][7], int *id_processo, int *tempo_fila, int *tempo, int pos_pai)
 {
     (*tam)++; //Aumenta o tamanho da fila
@@ -82,8 +89,12 @@ int main()
 
     int p[M][7]; //[ id_processo processo_pai tempo status ut_entrada ciclos]
     int fila1[10], fila2[10];
-    int i, f1 = 0, f2 = 0, j;
+    int i, f1 = 0, f2 = 0, j, k;
     int tempo_geral = 0, tempo_f1 = 0, tempo_f2 = 0;
+
+    zeros(&fila1,10);
+    zeros(&fila2,10);
+
     le_processos(p);
 
     //Primeiro Processo entra na fila 1
@@ -95,13 +106,15 @@ int main()
     p[0][2] = tempo_geral;
     tempo_f1 = tempo_geral;
 
-    for(j = 0; j< 10; j++) //Processos iniciando ciclos = 0
+    for(j = 0; j< 20; j++) //Processos iniciando ciclos = 0
                 p[j][6] = 0;
     i = 1;
+
     //Escalonamento
     while(i < 20)
     {
 
+        //Entrando na fila
         if(p[i][1] > 0)//Se existe dependencia
         {
             int posicao_pai = processo_pai_esta_na_fila(fila1,p[i][1]);
@@ -109,22 +122,46 @@ int main()
             if(posicao_pai > -1 && posicao_pai < 9 && f1 < 9) //Se processo pai está na fila1 e ainda tem espaco nela
                  adiciona_na_fila(&f1,fila1,p,&i,&tempo_f1,&tempo_geral,posicao_pai);//add na fila1
 
-           else if (f2 < 9)//Se não, o processo entra na fila 2, se houver espaço.
+            else if (f2 < 9)//Se não, o processo entra na fila 2, se houver espaço.
                 adiciona_na_fila(&f2,fila2,p,&i,&tempo_f2,&tempo_geral,posicao_pai);//add na fila2
 
        }
-       else if(f1> f2 && f2 < 9) {//Se a fila1 é maior que a 2, adiciona na fila 2
-            //printf("[%d] F2: f1 %d f2 %d\n",i,f1,f2);
+        else if(f1> f2 && f2 < 9)//Se a fila1 é maior que a 2, adiciona na fila 2
             adiciona_na_fila(&f2,fila2,p,&i,&tempo_f2,&tempo_geral,-1);//add na fila2
+        else//Adiciona na fila 1
+            adiciona_na_fila(&f1,fila1,p,&i,&tempo_f1,&tempo_geral,-1);//add na fila2
+
+
+         //Retirando os processos da fila 1
+         for(k = 0; k < f1; k++)
+         {
+
+            if(p[fila1[k]][2] > tempo_f1)
+            {
+                fila1[k] = 0;
+                f1--;
+                p[fila1[k]][2] = 3;
             }
-        else {//Adiciona na fila 1
-              //printf("[%d] F1: f1 %d f2 %d\n",i,f1,f2);
-              adiciona_na_fila(&f1,fila1,p,&i,&tempo_f1,&tempo_geral,-1);//add na fila2
-              }
+
+         }
+
+        //Retirando os processos da fila 2
+         for(k = 0; k < f2; k++)
+         {
+            if(p[fila2[k]][2] > tempo_f2)
+            {
+                fila2[k] = 0;
+                f2--;
+                p[fila2[k]][2] = 3;
+            }
+
+         }
+
          i++;
 
     }
-    }
+
+}
        /*
         *       ENTRANDO NA FILA
         */

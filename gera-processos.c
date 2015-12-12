@@ -1,6 +1,9 @@
 #include <stdio.h>
 #define N 20
 
+/*
+*
+*/
 int main()
 {
 
@@ -13,7 +16,7 @@ int main()
     fprintf(arq,"%d \n",N);
 
     //Gera as entradas e dependências para cada processo (add mais info)
-    for(i = 1; i< N; i++)
+    for(i = 1; i<= N; i++)
     {
         depende = rand()% i + 1; //Indica o processo dependente
         if( depende == i)

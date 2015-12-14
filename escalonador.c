@@ -50,6 +50,7 @@ int adiciona_na_fila(Fila *fila, Processo *p, Processo *pai, int *tempo_geral, i
 
     if (esta_na_fila(fila, pai) == -1) 
     {
+        printf("IF adicionando o processo: %d na fila\n", p->id);
         fila->fila[fila->tam] = p;
 
         p->status = EXECUTANDO;
@@ -61,6 +62,7 @@ int adiciona_na_fila(Fila *fila, Processo *p, Processo *pai, int *tempo_geral, i
     } 
     else  
     {
+        printf("ELSE adicionando o processo: %d na fila\n", p->id);
         fila->fila[pos_pai + 1] = p;
         fila->fila[fila->tam] = p;
 
@@ -89,11 +91,11 @@ Fila *cria_fila_vazia()
 
     return fila;
 }
-void le_processos(Processo processos[])
+void le_processos(Processo processos[], int *n)
 {
-    int n = 0, i;
+    int  i;
     FILE *arq;
-    arq = fopen("processos.txt","r");
+    arq = fopen("processos-teste.txt","r");
 
     if(arq == NULL)
     {
@@ -101,17 +103,25 @@ void le_processos(Processo processos[])
         return;
     }
 
-    fscanf(arq,"%d", &n);
+    fscanf(arq,"%d", n);
+    // printf("n: %d\n", *n);
 
-    for (i = 0; i < n; i++)
+    for (i = 0; i < *n; i++)
     {
-        fscanf(arq,"%d %d %d %d %d %d", &processos[i].id, 
+        fscanf(arq,"%d %d %d %d %d %d\n", &processos[i].id, 
                                         &processos[i].id_proc_pai, 
                                         &processos[i].tempo_estimado,
                                         &processos[i].tempo_real, 
                                         &processos[i].status, 
                                         &processos[i].ut_de_entrada);
-        
+
+
+       // printf("proc: %d %d %d %d %d %d\n", processos[i].id, 
+       //                                  processos[i].id_proc_pai, 
+       //                                  processos[i].tempo_estimado,
+       //                                  processos[i].tempo_real, 
+       //                                  processos[i].status, 
+       //                                  processos[i].ut_de_entrada);
     }
 
     fclose(arq);
@@ -120,11 +130,25 @@ void le_processos(Processo processos[])
 void print_fila(Fila *fila)
 {
     int i = 0;
+    printf("exibindo a fila...\n");
     for (i = 0; i < fila->tam; i++) 
     {
-        printf("Processo -- id: %d status: %d\n", fila->fila[i]->id, fila->fila[i]->status);
+        printf("Processo -- id: %d status: %d proc_pai: %d\n", fila->fila[i]->id, 
+                                                                fila->fila[i]->status,
+                                                                fila->fila[i]->id_proc_pai);
     }
 
+}
+void print_processos(Processo processos[], int n)
+{
+    int i = 0; 
+    printf("exibindo os processos...\n");
+    for (i = 0; i < n; i++) 
+    {
+        printf("Processo -- id: %d status: %d proc_pai: %d\n", processos[i].id, 
+                                                               processos[i].status,
+                                                               processos[i].id_proc_pai);
+    }
 }
 int main() 
 {
@@ -138,34 +162,41 @@ int main()
 
     FILE *arq_resultado;
 
+    int n = 0;
+
     Processo processos[M];
 
     Fila *fila1 = cria_fila_vazia(),
          *fila2 = cria_fila_vazia();
 
 
-    le_processos(processos);
+    le_processos(processos, &n);
 
     int tempo_geral = 0, i = 0, j = 0, k = 0;
 
-    printf("id: %d\n", processos[2].id);
+    // printf("id: %d\n", processos[2].id);
 
     //adiciona_na_fila(Fila *fila, Processo *p, Processo *pai, int *tempo_geral, int pos_pai) 
     //printf("esta na fila? %d\n", esta_na_fila(fila1, &pai_null));
-    adiciona_na_fila(fila1, &processos[0], &pai_null, &tempo_geral, -1);
+    processos[0].id_proc_pai = -2;
+    adiciona_na_fila(fila1, &processos[0], &pai_null, &tempo_geral, esta_na_fila(fila1, &pai_null));
     //printf("esta na fila? %d\n", esta_na_fila(fila1, &pai_null));
+
+    adiciona_na_fila(fila1, &processos[1], &processos[0], &tempo_geral, esta_na_fila(fila1, &processos[0]));
 
     print_fila(fila1);
 
     for(j = 0; j < M; j++) //Processos iniciando ciclos = 0
         processos[j].ciclos = 0;
 
+    // print_processos(processos, n);
+
     int ciclos = 1;
 
     while(ciclos <= 500)
     {
 
-
+        ciclos++;
     }
 
 

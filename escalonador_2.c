@@ -62,7 +62,7 @@ void le_processos(int processos[][7])
     if(arq == NULL)
     {
         printf("Erro ao ler arquivo.");
-        return 0;
+        return;
     }
 
     fscanf(arq,"%d",&n);

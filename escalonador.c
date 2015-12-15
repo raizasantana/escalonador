@@ -90,7 +90,7 @@ void le_processos(Processo processos[], int *n)
 {
     int  i;
     FILE *arq;
-    arq = fopen("processos-teste.txt","r");
+    arq = fopen("processos.txt","r");
 
     if(arq == NULL)
     {
@@ -100,7 +100,8 @@ void le_processos(Processo processos[], int *n)
 
     fscanf(arq,"%d", n);
     // printf("n: %d\n", *n);
-
+    
+    printf("\n**************************************\nLeitura dos processos:\n\n");
     for (i = 0; i < *n; i++)
     {
         fscanf(arq,"%d %d %d %d %d %d\n", &processos[i].id, 
@@ -111,13 +112,16 @@ void le_processos(Processo processos[], int *n)
                                         &processos[i].ut_de_entrada);
 
 
-       // printf("proc: %d %d %d %d %d %d\n", processos[i].id, 
-       //                                  processos[i].id_proc_pai, 
-       //                                  processos[i].tempo_estimado,
-       //                                  processos[i].tempo_real, 
-       //                                  processos[i].status, 
-       //                                  processos[i].ut_de_entrada);
+        printf("proc: id:%d id_pai:%d t_est:%d t_real:%d status:%d ut_entrada:%d\n",
+                                        processos[i].id,
+                                        processos[i].id_proc_pai,
+                                        processos[i].tempo_estimado,
+                                        processos[i].tempo_real,
+                                        processos[i].status,
+                                        processos[i].ut_de_entrada);
     }
+    
+    printf("\n***************************************\n\n");
 
     fclose(arq);
 
@@ -129,7 +133,7 @@ void remove_primeiro(Fila* fila)
     for (i = 0; i < fila->tam-1; i++) {
         fila->fila[i] = fila->fila[i+1];
     }
-    fila->tam = fila->tam -1;
+    fila->tam = fila->tam - 1;
 }
 
 void incrementa_temporeal_processos_fila(Fila* fila)
@@ -144,34 +148,42 @@ void incrementa_ciclos_processos_nos_processadores(int processador1, int process
 {
     if (processador1 != -1) {
         processos[processador1].ciclos++;
+        printf("\nProcesso %d @ processador1: ciclos %d de %d\n", processador1, processos[processador1].ciclos, processos[processador1].tempo_estimado);
     }
     
     if (processador2 != -1) {
         processos[processador2].ciclos++;
+        printf("\nProcesso %d @ processador2: ciclos %d de %d\n", processador2, processos[processador2].ciclos, processos[processador2].tempo_estimado);
     }
 }
 void print_fila(Fila *fila)
 {
     int i = 0;
-    printf("exibindo a fila...\n");
+    if (fila->tam == 0) {
+        printf("\nFila vazia\n");
+    }
     for (i = 0; i < fila->tam; i++) 
     {
-        printf("Processo -- id: %d status: %d proc_pai: %d\n", fila->fila[i]->id, 
+        printf("\nProcesso -- id: %d status: %d proc_pai: %d tempo_real: %d tempo_estimado: %d",
+                                                                fila->fila[i]->id,
                                                                 fila->fila[i]->status,
-                                                                fila->fila[i]->id_proc_pai);
+                                                                fila->fila[i]->id_proc_pai,
+                                                                fila->fila[i]->tempo_real,
+                                                                fila->fila[i]->tempo_estimado);
     }
 
 }
 
 void print_processos(Processo processos[], int n)
 {
-    int i = 0; 
-    printf("exibindo os processos...\n");
+    int i = 0;
     for (i = 0; i < n; i++) 
     {
-        printf("Processo -- id: %d status: %d proc_pai: %d\n", processos[i].id, 
-                                                               processos[i].status,
-                                                               processos[i].id_proc_pai);
+        printf("\nProcesso -- id: %d status: %d pai: %d ciclos: %d estimado: %d", processos[i].id,
+                                                            processos[i].status,
+                                                            processos[i].id_proc_pai,
+                                                            processos[i].ciclos,
+                                                            processos[i].tempo_estimado);
     }
 }
 
@@ -205,13 +217,10 @@ int main()
 
     //adiciona_na_fila(Fila *fila, Processo *p, Processo *pai, int *tempo_geral, int pos_pai) 
     //printf("esta na fila? %d\n", esta_na_fila(fila1, &pai_null));
-    processos[0].id_proc_pai = -2;
     //adiciona_na_fila(fila1, &processos[0], &pai_null, &tempo_geral, esta_na_fila(fila1, &pai_null));
     //printf("esta na fila? %d\n", esta_na_fila(fila1, &pai_null));
 
     //adiciona_na_fila(fila1, &processos[1], &processos[0], &tempo_geral, esta_na_fila(fila1, &processos[0]));
-
-    print_fila(fila1);
 
     for(j = 0; j < M; j++){ //Processos iniciando ciclos = 0
         processos[j].ciclos = 0;
@@ -226,6 +235,26 @@ int main()
     while(1)
     {
         printf("\n---------\nciclo: %d", ciclos);
+        
+        printf("\n***************");
+        printf("\nFILA 1:");
+        print_fila(fila1);
+        printf("\nFILA 2:");
+        print_fila(fila2);
+        printf("\n***************");
+        
+        
+        if (processador1 == -1 && fila1->tam > 0) { // está livre. pega o primeiro da fila1, se fila tiver alguém
+            printf("\nprocessador1 esta livre e vai pegar o p%d\n", fila1->fila[0]->id);
+            processador1 = fila1->fila[0]->id;
+            remove_primeiro(fila1);
+        }
+        if (processador2 == -1 && fila2->tam > 0) { // está livre. pega o primeiro da fila2, se fila tiver alguém
+            printf("\nprocessador2 esta livre e vai pegar o p%d\n", fila2->fila[0]->id);
+            processador2 = fila2->fila[0]->id;
+            remove_primeiro(fila2);
+        }
+        
         
         if (id_proc < n && processos[id_proc].status != TERMINADO && (fila1->tam < 9 || fila2->tam < 9) ) {
         
@@ -245,28 +274,19 @@ int main()
             }
             else // não tinha pai em nenhuma fila: adiciona na fila menor
             {
-                printf("\nnao tinha pai em nenhuma fila. fila1->tam: %d, fila2->tam:%d\n", fila1->tam, fila2->tam);
+                printf("\nprocesso %d nao tinha pai em nenhuma fila. fila1->tam: %d, fila2->tam:%d\n", id_proc, fila1->tam, fila2->tam);
                 if(fila1->tam < fila2->tam){
-                    printf("\n debug 3: add na fila 1 pq era menor\n");
+                    printf("\ndebug 3: add na fila 1 pq era menor\n");
                     adiciona_na_fila(fila1, &processos[id_proc], &processos[processos[id_proc].id_proc_pai], esta_na_fila(fila1, &processos[processos[id_proc].id_proc_pai]));
                 } else {
-                    printf("\n debug 3: add na fila 2 pq era menor\n");
+                    printf("\ndebug 3: add na fila 2 pq era menor\n");
                     adiciona_na_fila(fila2, &processos[id_proc], &processos[processos[id_proc].id_proc_pai], esta_na_fila(fila2, &processos[processos[id_proc].id_proc_pai]));
                 }
                 id_proc++;
             }
         }
         
-        if (processador1 == -1 && fila1->tam > 0) { // está livre. pega o primeiro da fila1, se fila tiver alguém
-            printf("\nprocessador1 esta livre e vai pegar o p%d\n", fila1->fila[0]->id);
-            processador1 = fila1->fila[0]->id;
-            remove_primeiro(fila1);
-        }
-        if (processador2 == -1 && fila2->tam > 0) { // está livre. pega o primeiro da fila2, se fila tiver alguém
-            printf("\nprocessador2 esta livre e vai pegar o p%d\n", fila2->fila[0]->id);
-            processador2 = fila2->fila[0]->id;
-            remove_primeiro(fila2);
-        }
+        
         
         if (processos[processador1].ciclos == processos[processador1].tempo_estimado) {
             printf("\nprocessador1: processo %d terminou!\n", processos[processador1].id);
@@ -288,8 +308,13 @@ int main()
         
         ciclos++;
         
-        if (id_proc == n && processador1 == -1 && processador2 == -1){ // processador 1 não está ficando livre nunca;
+        if (id_proc == n && processador1 == -1 && processador2 == -1 && fila1->tam == 0 && fila2->tam == 0){ // processador 1 não está ficando livre nunca;
             printf("\nTerminou\n");
+            
+            for (i=0; i<n; i++) {
+                printf("Processo %d: tempo_estimado: %d tempo_real: %d\n", i, processos[i].tempo_estimado, processos[i].tempo_real);
+            }
+            
             exit(0);
         }
     }

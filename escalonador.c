@@ -1,3 +1,14 @@
+/* TODO LIST:
+ 
+ considerar que processos estão há muito tempo sendo passados pra trás. então passa pra frente.
+ 
+ cache miss = anterior não é o pai
+ 
+ FIFO: diferença está no adiciona na fila, que vai ser bem mais simples:
+ 
+ */
+
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -51,26 +62,31 @@ void desloca_fila(Fila *fila, int pos_pai)
     }
 }
 
-void adiciona_na_fila(Fila *fila, Processo *p, Processo *pai, int pos_pai)
+int adiciona_na_fila(Fila *fila, Processo *p, Processo *pai, int pos_pai)
 {
     int j;
 
     if (esta_na_fila(fila, pai) == -1) // pai não está na fila. add no final da fila.
     {
-        printf("IF adicionando o processo: %d na fila\n", p->id);
-        
+        printf("\nIF adicionando o processo: %d na fila\n", p->id);
+
         p->status = EXECUTANDO;
         fila->fila[fila->tam] = p;
+        fila->tam++;
+        
+        return 1; // deu cache miss
     }
     else // pai está na fila. add depois do pai e move todos os outros pra trás
     {
-        printf("ELSE adicionando o processo: %d na fila\n", p->id);
+        printf("\nELSE adicionando o processo: %d na fila\n", p->id);
         desloca_fila(fila, pos_pai);
         p->status = EXECUTANDO;
         fila->fila[pos_pai + 1] = p;
+        fila->tam++;
+        
+        return 0; // nao deu cache miss
     }
-    
-    fila->tam++;
+
 }
 
 Fila *cria_fila_vazia()
@@ -212,6 +228,8 @@ int main()
     le_processos(processos, &n);
 
     int tempo_geral = 0, i = 0, j = 0, k = 0;
+    
+    int cache_miss = 0;
 
     // printf("id: %d\n", processos[2].id);
 
@@ -263,13 +281,13 @@ int main()
             if (fila1->tam < 9 && esta_na_fila(fila1, &processos[processos[id_proc].id_proc_pai]) > -1) // se a fila1 ainda não está cheia e o pai está nela
             {
                 printf("\ndebug 1: add pq tinha pai na fila 1");
-                adiciona_na_fila(fila1, &processos[id_proc], &processos[processos[id_proc].id_proc_pai], esta_na_fila(fila1, &processos[processos[id_proc].id_proc_pai]));
+                cache_miss += adiciona_na_fila(fila1, &processos[id_proc], &processos[processos[id_proc].id_proc_pai], esta_na_fila(fila1, &processos[processos[id_proc].id_proc_pai]));
                 id_proc ++; // chama o próximo pra ser escalonado
             }
             else if (fila2->tam < 9 && esta_na_fila(fila2, &processos[processos[id_proc].id_proc_pai]) > -1) // se o pai estiver na fila2 e esta ainda não estiver cheia
             {
                 printf("\ndebug 2: add pq tinha pai na fila 2");
-                adiciona_na_fila(fila2, &processos[id_proc], &processos[processos[id_proc].id_proc_pai], esta_na_fila(fila2, &processos[processos[id_proc].id_proc_pai]));
+                cache_miss += adiciona_na_fila(fila2, &processos[id_proc], &processos[processos[id_proc].id_proc_pai], esta_na_fila(fila2, &processos[processos[id_proc].id_proc_pai]));
                 id_proc++;
             }
             else // não tinha pai em nenhuma fila: adiciona na fila menor
@@ -277,10 +295,10 @@ int main()
                 printf("\nprocesso %d nao tinha pai em nenhuma fila. fila1->tam: %d, fila2->tam:%d\n", id_proc, fila1->tam, fila2->tam);
                 if(fila1->tam < fila2->tam){
                     printf("\ndebug 3: add na fila 1 pq era menor\n");
-                    adiciona_na_fila(fila1, &processos[id_proc], &processos[processos[id_proc].id_proc_pai], esta_na_fila(fila1, &processos[processos[id_proc].id_proc_pai]));
+                    cache_miss += adiciona_na_fila(fila1, &processos[id_proc], &processos[processos[id_proc].id_proc_pai], esta_na_fila(fila1, &processos[processos[id_proc].id_proc_pai]));
                 } else {
                     printf("\ndebug 3: add na fila 2 pq era menor\n");
-                    adiciona_na_fila(fila2, &processos[id_proc], &processos[processos[id_proc].id_proc_pai], esta_na_fila(fila2, &processos[processos[id_proc].id_proc_pai]));
+                    cache_miss += adiciona_na_fila(fila2, &processos[id_proc], &processos[processos[id_proc].id_proc_pai], esta_na_fila(fila2, &processos[processos[id_proc].id_proc_pai]));
                 }
                 id_proc++;
             }
@@ -316,6 +334,8 @@ int main()
             for (i=0; i<n; i++) {
                 printf("Processo %d: tempo_estimado: %d tempo_real: %d\n", i, processos[i].tempo_estimado, processos[i].tempo_real);
             }
+            
+            printf("\nCache misses: %d\n", cache_miss);
             
             exit(0);
         }

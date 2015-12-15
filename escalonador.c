@@ -21,6 +21,8 @@
 #define EXECUTANDO 2
 #define TERMINADO 3
 
+#define PROCESSADOR_LIVRE -1
+
 
 typedef struct _processo {
     int id;
@@ -219,7 +221,7 @@ int main()
 
     Processo processos[M];
     
-    int processador1 = -1, processador2 = -1;
+    int processador1 = PROCESSADOR_LIVRE, processador2 = PROCESSADOR_LIVRE;
 
     Fila *fila1 = cria_fila_vazia(),
          *fila2 = cria_fila_vazia();
@@ -262,12 +264,12 @@ int main()
         printf("\n***************");
         
         
-        if (processador1 == -1 && fila1->tam > 0) { // está livre. pega o primeiro da fila1, se fila tiver alguém
+        if (processador1 == PROCESSADOR_LIVRE && fila1->tam > 0) { // está livre. pega o primeiro da fila1, se fila tiver alguém
             printf("\nprocessador1 esta livre e vai pegar o p%d\n", fila1->fila[0]->id);
             processador1 = fila1->fila[0]->id;
             remove_primeiro(fila1);
         }
-        if (processador2 == -1 && fila2->tam > 0) { // está livre. pega o primeiro da fila2, se fila tiver alguém
+        if (processador2 == PROCESSADOR_LIVRE && fila2->tam > 0) { // está livre. pega o primeiro da fila2, se fila tiver alguém
             printf("\nprocessador2 esta livre e vai pegar o p%d\n", fila2->fila[0]->id);
             processador2 = fila2->fila[0]->id;
             remove_primeiro(fila2);

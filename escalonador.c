@@ -223,27 +223,34 @@ int main()
     
     int id_proc = 0;
 
-    while(ciclos <= 500)
+    while(1)
     {
-        if (processos[id_proc].status != TERMINADO && (fila1->tam < 9 || fila2->tam < 9) ) {
+        printf("\n---------\nciclo: %d", ciclos);
+        
+        if (id_proc < n && processos[id_proc].status != TERMINADO && (fila1->tam < 9 || fila2->tam < 9) ) {
         
             processos[id_proc].tempo_real = ciclos;
             
             if (fila1->tam < 9 && esta_na_fila(fila1, &processos[processos[id_proc].id_proc_pai]) > -1) // se a fila1 ainda não está cheia e o pai está nela
             {
+                printf("\ndebug 1: add pq tinha pai na fila 1");
                 adiciona_na_fila(fila1, &processos[id_proc], &processos[processos[id_proc].id_proc_pai], esta_na_fila(fila1, &processos[processos[id_proc].id_proc_pai]));
                 id_proc ++; // chama o próximo pra ser escalonado
             }
             else if (fila2->tam < 9 && esta_na_fila(fila2, &processos[processos[id_proc].id_proc_pai]) > -1) // se o pai estiver na fila2 e esta ainda não estiver cheia
             {
+                printf("\ndebug 2: add pq tinha pai na fila 2");
                 adiciona_na_fila(fila2, &processos[id_proc], &processos[processos[id_proc].id_proc_pai], esta_na_fila(fila2, &processos[processos[id_proc].id_proc_pai]));
                 id_proc++;
             }
             else // não tinha pai em nenhuma fila: adiciona na fila menor
             {
+                printf("\nnao tinha pai em nenhuma fila. fila1->tam: %d, fila2->tam:%d\n", fila1->tam, fila2->tam);
                 if(fila1->tam < fila2->tam){
+                    printf("\n debug 3: add na fila 1 pq era menor\n");
                     adiciona_na_fila(fila1, &processos[id_proc], &processos[processos[id_proc].id_proc_pai], esta_na_fila(fila1, &processos[processos[id_proc].id_proc_pai]));
                 } else {
+                    printf("\n debug 3: add na fila 2 pq era menor\n");
                     adiciona_na_fila(fila2, &processos[id_proc], &processos[processos[id_proc].id_proc_pai], esta_na_fila(fila2, &processos[processos[id_proc].id_proc_pai]));
                 }
                 id_proc++;
@@ -251,20 +258,24 @@ int main()
         }
         
         if (processador1 == -1 && fila1->tam > 0) { // está livre. pega o primeiro da fila1, se fila tiver alguém
+            printf("\nprocessador1 esta livre e vai pegar o p%d\n", fila1->fila[0]->id);
             processador1 = fila1->fila[0]->id;
             remove_primeiro(fila1);
         }
         if (processador2 == -1 && fila2->tam > 0) { // está livre. pega o primeiro da fila2, se fila tiver alguém
+            printf("\nprocessador2 esta livre e vai pegar o p%d\n", fila2->fila[0]->id);
             processador2 = fila2->fila[0]->id;
             remove_primeiro(fila2);
         }
         
         if (processos[processador1].ciclos == processos[processador1].tempo_estimado) {
+            printf("\nprocessador1: processo %d terminou!\n", processos[processador1].id);
             processos[processador1].status = TERMINADO;
             processador1 = -1; // coloca o processador1 como livre de novo
         }
         
         if (processos[processador2].ciclos == processos[processador2].tempo_estimado) {
+            printf("\nprocessador2: processo %d terminou!\n", processos[processador2].id);
             processos[processador2].status = TERMINADO;
             processador2 = -1; // processador 2 está livre
         }
@@ -277,9 +288,9 @@ int main()
         
         ciclos++;
         
-        if (id_proc == n) {
-            printf("terminei caralho\n");
-            break;
+        if (id_proc == n && processador1 == -1 && processador2 == -1){ // processador 1 não está ficando livre nunca;
+            printf("\nTerminou\n");
+            exit(0);
         }
     }
 

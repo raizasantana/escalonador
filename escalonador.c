@@ -291,12 +291,14 @@ int main()
         if (processos[processador1].ciclos == processos[processador1].tempo_estimado) {
             printf("\nprocessador1: processo %d terminou!\n", processos[processador1].id);
             processos[processador1].status = TERMINADO;
+            processos[processador1].tempo_real = processos[processador1].tempo_real + processos[processador1].ciclos;
             processador1 = -1; // coloca o processador1 como livre de novo
         }
         
         if (processos[processador2].ciclos == processos[processador2].tempo_estimado) {
             printf("\nprocessador2: processo %d terminou!\n", processos[processador2].id);
             processos[processador2].status = TERMINADO;
+            processos[processador2].tempo_real = processos[processador2].tempo_real + processos[processador2].ciclos;
             processador2 = -1; // processador 2 está livre
         }
         

@@ -13,39 +13,39 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define FILA_TAM 10
+#define FILA_MAX_TAM 10
 #define M 20
 
-#define PRONTO 0
-#define BLOQUEADO 1
-#define EXECUTANDO 2
-#define TERMINADO 3
+typedef enum {
+    PRONTO = 0,
+    BLOQUEADO,
+    EXECUTANDO,
+    TERMINADO,
+    LIVRE,
+    OCUPADO
+} Status;
 
 typedef struct _processo {
     int id;
     int id_proc_pai;
     int tempo_estimado;
     int tempo_real;
-    int status;
+    Status status;
     int ut_de_entrada;
     int ciclos;
 } Processo;
 
 typedef struct _fila {
-    Processo *fila[FILA_TAM];
+    Processo *fila[FILA_MAX_TAM];
     int tam;
     int tempo_estimado;
     int tempo_real;
 } Fila;
 
-typedef enum _proc_Status { 
-    LIVRE = -1, 
-    OCUPADO
-} ProcStatus;
 
 typedef struct _proc {
     Processo *p;
-    ProcStatus status;
+    Status status;
 } Processador;
 
 void print_processo(Processo p)
@@ -128,7 +128,7 @@ Fila *cria_fila_vazia()
 {
     Fila *fila = malloc(sizeof(Fila));
     int i = 0;
-    for (i = 0; i < FILA_TAM; i++)
+    for (i = 0; i < FILA_MAX_TAM; i++)
         fila->fila[i] = NULL;
 
     fila->tam = 0;
@@ -236,7 +236,7 @@ int esta_vazia(Fila *fila)
 }
 int esta_cheia(Fila *fila)
 {
-    return fila->tam == FILA_TAM;
+    return fila->tam == FILA_MAX_TAM;
 }
 Processo *get_pai(Processo p)
 {
@@ -318,13 +318,13 @@ int main()
         
             processos[id_proc].tempo_real = ciclos;
             
-            if (fila1->tam < FILA_TAM - 1 && esta_na_fila(fila1, &processos[processos[id_proc].id_proc_pai]) > -1) // se a fila1 ainda não está cheia e o pai está nela
+            if (fila1->tam < FILA_MAX_TAM - 1 && esta_na_fila(fila1, &processos[processos[id_proc].id_proc_pai]) > -1) // se a fila1 ainda não está cheia e o pai está nela
             {
                 printf("\ndebug 1: add pq tinha pai na fila 1");
                 cache_miss += adiciona_na_fila(fila1, &processos[id_proc], &processos[processos[id_proc].id_proc_pai], esta_na_fila(fila1, &processos[processos[id_proc].id_proc_pai]));
                 id_proc++; // chama o próximo pra ser escalonado
             }
-            else if (fila2->tam < FILA_TAM - 1 && esta_na_fila(fila2, &processos[processos[id_proc].id_proc_pai]) > -1) // se o pai estiver na fila2 e esta ainda não estiver cheia
+            else if (fila2->tam < FILA_MAX_TAM - 1 && esta_na_fila(fila2, &processos[processos[id_proc].id_proc_pai]) > -1) // se o pai estiver na fila2 e esta ainda não estiver cheia
             {
                 printf("\ndebug 2: add pq tinha pai na fila 2");
                 cache_miss += adiciona_na_fila(fila2, &processos[id_proc], &processos[processos[id_proc].id_proc_pai], esta_na_fila(fila2, &processos[processos[id_proc].id_proc_pai]));

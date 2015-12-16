@@ -155,13 +155,15 @@ void le_processos(Processo processos[], int *n)
     printf("\n**************************************\nLeitura dos processos:\n\n");
     for (i = 0; i < *n; i++)
     {
+        int status = 0;
         fscanf(arq,"%d %d %d %d %d %d\n", &processos[i].id, 
                                         &processos[i].id_proc_pai, 
                                         &processos[i].tempo_estimado,
                                         &processos[i].tempo_real, 
-                                        &processos[i].status, 
+                                        &status, 
                                         &processos[i].ut_de_entrada);
         processos[i].ciclos = 0;
+        processos[i].status = PRONTO;
 
 
         print_processo(processos[i]);
@@ -238,13 +240,9 @@ int esta_cheia(Fila *fila)
 {
     return fila->tam == FILA_MAX_TAM;
 }
-Processo *get_pai(Processo p)
+int run_something_else()
 {
-    if (1) {}
-}
-int main() 
-{
-    Processo pai_null = {.id = -1, 
+     Processo pai_null = {.id = -1, 
                         .id_proc_pai = -1, 
                         .tempo_estimado = 0,   
                         .tempo_real = 0,
@@ -381,13 +379,102 @@ int main()
             
             printf("\nCache misses: %d\n", cache_miss);
             
-            exit(0);
+            break;
         }
     }
 
     free(fila1);
     free(fila2);
 
+    return cache_miss;
+
+}
+int tem_pai(Processo *p)
+{
+    return p->id_proc_pai != -1;
+}
+int verifica_cache_miss(Processo *p, Processo processos[])
+{
+    return !tem_pai(p) || processos[p->id_proc_pai].status == PRONTO;
+}
+void run_fifo()
+{
+         Processo pai_null = {.id = -1, 
+                        .id_proc_pai = -1, 
+                        .tempo_estimado = 0,   
+                        .tempo_real = 0,
+                        .status = 0,
+                        .ut_de_entrada = 0,
+                        .ciclos = 0}; 
+
+    FILE *arq_resultado;
+
+    int n = 0;
+
+    Processo processos[M + 1];
+    
+    Processador processador1 = {.p = NULL, .status = LIVRE};
+    Processador processador2 = {.p = NULL, .status = LIVRE};
+
+    le_processos(processos, &n);
+
+    int tempo_geral = 0, i = 0, j = 0, k = 0;
+    
+    int cache_miss = 0;
+
+    int ciclos = 1;
+    
+    for (i = 0; i < n; ) 
+    {
+        Processo *p = &processos[i];
+
+        if (processador1.status == LIVRE) { // está livre
+            Processo *p = &processos[i++];
+            printf("\nprocessador1 esta livre e vai pegar o p%d\n", p->id);
+            cache_miss += verifica_cache_miss(p, processos);
+            aloca_processo(&processador1, p);
+        }
+        if (processador2.status == LIVRE) { // está livre. 
+            Processo *p = &processos[i++];
+            cache_miss += verifica_cache_miss(p, processos);
+            printf("\nprocessador2 esta livre e vai pegar o p%d\n", p->id);
+            aloca_processo(&processador2, p);
+        }
+
+        incrementa_ciclos_processos_nos_processadores(&processador1, &processador2);
+
+        if (processador1.status == OCUPADO && processador1.p->ciclos == processador1.p->tempo_estimado) {
+            printf("\nprocessador1: processo %d terminou!\n", processador1.p->id);
+            processador1.p->status = TERMINADO;
+            processador1.p->tempo_real = processador1.p->tempo_real + processador1.p->ciclos;
+            libera_processador(&processador1); // coloca o processador1 como livre de novo
+        }
+        
+        if (processador2.status == OCUPADO && processador2.p->ciclos == processador2.p->tempo_estimado) {
+            printf("\nprocessador2: processo %d terminou!\n", processador2.p->id);
+            processador2.p->status = TERMINADO;
+            processador2.p->tempo_real = processador2.p->tempo_real + processador2.p->ciclos;
+            libera_processador(&processador2); // processador 2 está livre
+        }
+
+        ciclos++;
+    }
+    for (i = 0; i < n; i++) 
+    {
+        printf("Processo %d: tempo_estimado: %d tempo_real: %d\n", i, processos[i].tempo_estimado, processos[i].tempo_real);
+    }
+            
+    printf("\nCache misses: %d\n", cache_miss);
+
+    return cache_miss;
+}
+int main() 
+{
+
+    run_fifo();
+
+    // run_something_else();
+   
     return 0;
 
 }

@@ -78,10 +78,9 @@ int esta_na_fila(Fila *fila, Processo *p)
 
     for (i = 0; i < fila->tam; i++) 
     {
-        if (fila->fila[i] == NULL)
-            return -1;
-        else if (fila->fila[i]->id == p->id)
+        if (fila->fila[i]->id == p->id){
             return i;
+        }
     }
     return -1;
 }
@@ -89,7 +88,8 @@ int esta_na_fila(Fila *fila, Processo *p)
 void desloca_fila(Fila *fila, int pos_pai)
 {
     int i;
-    for(i = fila->tam; i > pos_pai + 2; i--) //vai copiando pra cima os processos pra abrir lugar pro novo entrar
+    
+    for(i = fila->tam; i > pos_pai + 1; i--) //vai copiando pra cima os processos pra abrir lugar pro novo entrar
     {
         fila->fila[i] = fila->fila[i - 1];
     }
@@ -99,7 +99,7 @@ int adiciona_na_fila(Fila *fila, Processo *p, Processo *pai, int pos_pai)
 {
     int j;
 
-    print_processo(*p);
+    //print_processo(*p);
 
     if (esta_na_fila(fila, pai) == -1) // pai não está na fila. add no final da fila.
     {
@@ -194,25 +194,25 @@ void remove_primeiro(Fila* fila)
 void incrementa_temporeal_processos_fila(Fila* fila)
 {
     int i;
-    for (i = 0; i < fila->tam; i++) {
+    for (i = 0; i < fila->tam; i++)
         fila->fila[i]->tempo_real++;
-    }
+
 }
 
 void incrementa_ciclos_processos_nos_processadores(Processador *processador1, Processador *processador2)
 {
-    if (processador1->status == OCUPADO) 
+    if (processador1->status == OCUPADO)
     {
         Processo *p = processador1->p;
         p->ciclos++;
         printf("\nProcesso %d @ processador1: ciclos %d de %d\n", p->id, p->ciclos, p->tempo_estimado);
     }
-    if (processador2->status == OCUPADO) 
+    if (processador2->status == OCUPADO)
     {
         Processo *p = processador2->p;
         p->ciclos++;
-        printf("\nProcesso %d @ processador1: ciclos %d de %d\n", p->id, p->ciclos, p->tempo_estimado);
-    }    
+        printf("\nProcesso %d @ processador2: ciclos %d de %d\n", p->id, p->ciclos, p->tempo_estimado);
+    }
 }
 
 void print_fila(Fila *fila)
@@ -299,14 +299,14 @@ int run_something_else()
       while(1)
     {
         printf("\n---------\nciclo: %d", ciclos);
-        
+        /*
         printf("\n***************");
         printf("\nFILA 1:");
         print_fila(fila1);
         printf("\nFILA 2:");
         print_fila(fila2);
         printf("\n***************");
-        
+        */
         
         if (processador1.status == LIVRE && !esta_vazia(fila1)) { // está livre. pega o primeiro da fila1, se fila tiver alguém
             printf("\nprocessador1 esta livre e vai pegar o p%d\n", fila1->fila[0]->id);
@@ -324,15 +324,15 @@ int run_something_else()
         
             processos[id_proc].tempo_real = ciclos;
             
-            if (fila1->tam < FILA_MAX_TAM - 1 && esta_na_fila(fila1, &processos[processos[id_proc].id_proc_pai]) > -1) // se a fila1 ainda não está cheia e o pai está nela
+            if (fila1->tam < FILA_MAX_TAM - 1 && processos[id_proc].id_proc_pai != -2 && esta_na_fila(fila1, &processos[processos[id_proc].id_proc_pai]) > -1) // se a fila1 ainda não está cheia e o pai está nela
             {
-                printf("\ndebug 1: add pq tinha pai na fila 1");
+                printf("\ndebug 1: add PROC %d pq tinha pai %d na fila 1", id_proc, processos[id_proc].id_proc_pai);
                 cache_miss += adiciona_na_fila(fila1, &processos[id_proc], &processos[processos[id_proc].id_proc_pai], esta_na_fila(fila1, &processos[processos[id_proc].id_proc_pai]));
                 id_proc++; // chama o próximo pra ser escalonado
             }
-            else if (fila2->tam < FILA_MAX_TAM - 1 && esta_na_fila(fila2, &processos[processos[id_proc].id_proc_pai]) > -1) // se o pai estiver na fila2 e esta ainda não estiver cheia
+            else if (fila2->tam < FILA_MAX_TAM - 1 && processos[id_proc].id_proc_pai != -2 && esta_na_fila(fila2, &processos[processos[id_proc].id_proc_pai]) > -1) // se o pai estiver na fila2 e esta ainda não estiver cheia
             {
-                printf("\ndebug 2: add pq tinha pai na fila 2");
+                printf("\ndebug 2: add PROC %d pq tinha pai %d na fila 2", id_proc, processos[id_proc].id_proc_pai);
                 cache_miss += adiciona_na_fila(fila2, &processos[id_proc], &processos[processos[id_proc].id_proc_pai], esta_na_fila(fila2, &processos[processos[id_proc].id_proc_pai]));
                 id_proc++;
             }
@@ -399,7 +399,7 @@ int run_something_else()
 }
 int tem_pai(Processo *p)
 {
-    return p->id_proc_pai != -1;
+    return p->id_proc_pai != -1 && p->id_proc_pai != -2;
 }
 int verifica_cache_miss(Processo *p, Processador *processador)
 {
@@ -494,9 +494,9 @@ void run_fifo()
 int main() 
 {
 
-    run_fifo();
+    //run_fifo();
 
-    //run_something_else();
+    run_something_else();
    
     return 0;
 

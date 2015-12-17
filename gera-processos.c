@@ -1,25 +1,25 @@
 #include <stdio.h>
 #include <stdlib.h>
-#define N 500
 #define CICLOS_MAX 100
 
 /*
 *
 */
-int main()
+int main(int argc, char *argv[])
 {
 
     FILE *arq;
     int i, depende;
+    int n = atoi(argv[1]);
 
     arq = fopen("processos.txt","w+");
 
     //Escreve a quantidade de processos a serem escalonados
-    fprintf(arq,"%d \n",N);
+    fprintf(arq,"%d \n", n);
 
      srand (time(NULL));
     //Gera as entradas e dependências para cada processo 
-    for(i = 0; i< N; i++)
+    for(i = 0; i< n; i++)
     {
 	 if (i==0)
             depende = -2;

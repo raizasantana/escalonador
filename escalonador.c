@@ -166,7 +166,14 @@ void le_processos(Processo processos[], int *n)
         processos[i].status = PRONTO;
 
 
-       // print_processo(processos[i]);
+        printf("proc: id:%d id_pai:%d t_est:%d t_real:%d status:%d ut_entrada:%d\n",
+               processos[i].id,
+               processos[i].id_proc_pai,
+               processos[i].tempo_estimado,
+               processos[i].tempo_real,
+               processos[i].status,
+               processos[i].ut_de_entrada);
+        
     }
     
     printf("\n***************************************\n\n");
@@ -394,9 +401,13 @@ int tem_pai(Processo *p)
 {
     return p->id_proc_pai != -1;
 }
-int verifica_cache_miss(Processo *p, Processo processos[], Processador *proc)
+int verifica_cache_miss(Processo *p, Processador *processador)
 {
-    return !tem_pai(p) || processos[p->id_proc_pai].status == PRONTO || proc->ultimo_processo_executado->id != p->id_proc_pai;
+    if (processador->ultimo_processo_executado == NULL) {
+        return 1;
+    } else {
+        return processador->ultimo_processo_executado->id != p->id_proc_pai;
+    }
 }
 void run_fifo()
 {
@@ -410,9 +421,9 @@ void run_fifo()
 
     FILE *arq_resultado;
 
+    Processo processos[M+1];
+    
     int n = 0;
-
-    Processo processos[M + 1];
     
     Processador processador1 = {.p = NULL, .status = LIVRE, .ultimo_processo_executado = NULL};
     Processador processador2 = {.p = NULL, .status = LIVRE, .ultimo_processo_executado = NULL};
@@ -420,26 +431,31 @@ void run_fifo()
     le_processos(processos, &n);
 
     int tempo_geral = 0, i = 0, j = 0, k = 0;
+    int proc_id = 0;
     
     int cache_miss = 0;
 
     int ciclos = 1;
     printf("EE %d\n",n);
-    for (i = 0; i < n; i++) 
+    
+    while (1)
     {
-        Processo *p = &processos[i];
 
-        if (processador1.status == LIVRE) { // está livre
-            Processo *p = &processos[i++];
+        if (proc_id < n && processador1.status == LIVRE) { // está livre
+            Processo *p = &processos[proc_id];
+            p->tempo_real = ciclos;
             printf("\nprocessador1 esta livre e vai pegar o p%d\n", p->id);
-            cache_miss += verifica_cache_miss(p, processos, &processador1);
+            cache_miss += verifica_cache_miss(p, &processador1);
             aloca_processo(&processador1, p);
+            proc_id++;
         }
-        if (processador2.status == LIVRE) { // está livre. 
-            Processo *p = &processos[i++];
-            cache_miss += verifica_cache_miss(p, processos,&processador2);
+        if (proc_id < n && processador2.status == LIVRE) { // está livre.
+            Processo *p = &processos[proc_id];
+            p->tempo_real = ciclos;
+            cache_miss += verifica_cache_miss(p, &processador2);
             printf("\nprocessador2 esta livre e vai pegar o p%d\n", p->id);
             aloca_processo(&processador2, p);
+            proc_id++;
         }
 
         incrementa_ciclos_processos_nos_processadores(&processador1, &processador2);
@@ -457,24 +473,30 @@ void run_fifo()
             processador2.p->tempo_real = processador2.p->tempo_real + processador2.p->ciclos;
             libera_processador(&processador2); // processador 2 está livre
         }
+        
+        if (proc_id == n && processador1.status == LIVRE && processador2.status == LIVRE){ // processador 1 não está ficando livre nunca;
+            printf("\nTerminou\n");
+            
+            for (i = 0; i < n; i++) {
+                printf("Processo %d: tempo_estimado: %d tempo_real: %d\n", i, processos[i].tempo_estimado, processos[i].tempo_real);
+            }
+            
+            printf("\nCache misses: %d\n", cache_miss);
+            
+            break;
+        }
 
         ciclos++;
+        
     }
-    for (i = 0; i < n; i++) 
-    {
-        printf("Processo %d: tempo_estimado: %d tempo_real: %d\n", i, processos[i].tempo_estimado, processos[i].tempo_real);
-    }
-            
-    printf("\nCache misses: %d\n", cache_miss);
-
    // return cache_miss;
 }
 int main() 
 {
 
-    //run_fifo();
+    run_fifo();
 
-     run_something_else();
+    //run_something_else();
    
     return 0;
 

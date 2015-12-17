@@ -14,7 +14,7 @@
 #include <string.h>
 
 #define FILA_MAX_TAM 10
-#define M 20
+#define M 500
 
 typedef enum {
     PRONTO = 0,
@@ -44,7 +44,7 @@ typedef struct _fila {
 
 
 typedef struct _proc {
-    Processo *p;
+    Processo *p, *ultimo_processo_executado;
     Status status;
 } Processador;
 
@@ -150,7 +150,7 @@ void le_processos(Processo processos[], int *n)
     }
 
     fscanf(arq,"%d", n);
-    // printf("n: %d\n", *n);
+     printf("n: %d\n", *n);
     
     printf("\n**************************************\nLeitura dos processos:\n\n");
     for (i = 0; i < *n; i++)
@@ -166,7 +166,7 @@ void le_processos(Processo processos[], int *n)
         processos[i].status = PRONTO;
 
 
-        print_processo(processos[i]);
+       // print_processo(processos[i]);
     }
     
     printf("\n***************************************\n\n");
@@ -228,6 +228,7 @@ void aloca_processo(Processador *processador, Processo *p)
 }
 void libera_processador(Processador *processador)
 {
+    processador->ultimo_processo_executado = processador->p;
     processador->p = NULL;
     processador->status = LIVRE;
 }
@@ -256,8 +257,8 @@ int run_something_else()
 
     Processo processos[M + 1];
     
-    Processador processador1 = {.p = NULL, .status = LIVRE};
-    Processador processador2 = {.p = NULL, .status = LIVRE};
+    Processador processador1 = {.p = NULL, .status = LIVRE, .ultimo_processo_executado = NULL};
+    Processador processador2 = {.p = NULL, .status = LIVRE, .ultimo_processo_executado = NULL};
 
     Fila *fila1 = cria_fila_vazia(),
          *fila2 = cria_fila_vazia();
@@ -393,9 +394,9 @@ int tem_pai(Processo *p)
 {
     return p->id_proc_pai != -1;
 }
-int verifica_cache_miss(Processo *p, Processo processos[])
+int verifica_cache_miss(Processo *p, Processo processos[], Processador *proc)
 {
-    return !tem_pai(p) || processos[p->id_proc_pai].status == PRONTO;
+    return !tem_pai(p) || processos[p->id_proc_pai].status == PRONTO || proc->ultimo_processo_executado->id != p->id_proc_pai;
 }
 void run_fifo()
 {
@@ -413,8 +414,8 @@ void run_fifo()
 
     Processo processos[M + 1];
     
-    Processador processador1 = {.p = NULL, .status = LIVRE};
-    Processador processador2 = {.p = NULL, .status = LIVRE};
+    Processador processador1 = {.p = NULL, .status = LIVRE, .ultimo_processo_executado = NULL};
+    Processador processador2 = {.p = NULL, .status = LIVRE, .ultimo_processo_executado = NULL};
 
     le_processos(processos, &n);
 
@@ -423,20 +424,20 @@ void run_fifo()
     int cache_miss = 0;
 
     int ciclos = 1;
-    
-    for (i = 0; i < n; ) 
+    printf("EE %d\n",n);
+    for (i = 0; i < n; i++) 
     {
         Processo *p = &processos[i];
 
         if (processador1.status == LIVRE) { // está livre
             Processo *p = &processos[i++];
             printf("\nprocessador1 esta livre e vai pegar o p%d\n", p->id);
-            cache_miss += verifica_cache_miss(p, processos);
+            cache_miss += verifica_cache_miss(p, processos, &processador1);
             aloca_processo(&processador1, p);
         }
         if (processador2.status == LIVRE) { // está livre. 
             Processo *p = &processos[i++];
-            cache_miss += verifica_cache_miss(p, processos);
+            cache_miss += verifica_cache_miss(p, processos,&processador2);
             printf("\nprocessador2 esta livre e vai pegar o p%d\n", p->id);
             aloca_processo(&processador2, p);
         }
@@ -466,14 +467,14 @@ void run_fifo()
             
     printf("\nCache misses: %d\n", cache_miss);
 
-    return cache_miss;
+   // return cache_miss;
 }
 int main() 
 {
 
-    run_fifo();
+    //run_fifo();
 
-    // run_something_else();
+     run_something_else();
    
     return 0;
 
